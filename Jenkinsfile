@@ -3,16 +3,12 @@ pipeline {
 
     stages {
         stage('Build') {
-            // Here we are defining an agent 
             agent {
-                // The agent is docker
                 docker {
-                    // In the docker configuration we are specifying an image and the image is node:18-alpine
                     image 'node:18-alpine'
                     reuseNode true
                 }
             }
-
             steps {
                 sh '''
                     ls -la
@@ -21,6 +17,22 @@ pipeline {
                     npm ci
                     npm run build
                     ls -la
+                '''
+            }
+        }
+
+        stage('Test') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+
+            steps {
+                sh '''
+                    test -f build/index.html
+                    npm test
                 '''
             }
         }

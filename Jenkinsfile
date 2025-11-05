@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     stages {
-        /*
 
         stage('Build') {
             agent {
@@ -22,11 +21,8 @@ pipeline {
                 '''
             }
         }
-        */
 
-        //Here we are defining a stage that is a group stage, which contains multiple stages (Here multiple stages are which run in parallel)
-        stage('Tests') { 
-            //Here we are defining a parallel block which tells jenkins to run the stages inside it in parallel
+        stage('Tests') {
             parallel {
                 stage('Unit tests') {
                     agent {
@@ -42,9 +38,6 @@ pipeline {
                             npm test
                         '''
                     }
-
-                    //post always action, more specific to the stage that actually needs it
-                    //This post action is to the Unit tests stage
                     post {
                         always {
                             junit 'jest-results/junit.xml'
@@ -69,14 +62,28 @@ pipeline {
                         '''
                     }
 
-                    //post always action, more specific to the stage that actually needs it
-                    //This post action is to the E2E stage
                     post {
                         always {
                             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report', reportTitles: '', useWrapperFileDirectly: true])
                         }
                     }
                 }
+            }
+        }
+
+        // New stage deploy
+        stage('Deploy') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    npm install netlify-cli
+                    node_modules/.bin/netlify --version
+                '''
             }
         }
     }

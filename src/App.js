@@ -12,7 +12,8 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn Jenkins on Udemy with Mahesh 3
+          Learn Jenkins on Udemy
+          Use node:18-slim instead of node:18-alpine 
         </a>
       </header>
       <p>

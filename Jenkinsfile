@@ -11,7 +11,7 @@ pipeline {
         stage('Build') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'node:18-slim'
                     reuseNode true
                 }
             }
@@ -21,7 +21,7 @@ pipeline {
                     node --version
                     npm --version
                     npm ci
-                    CI= npm run build
+                    npm run build
                     ls -la
                 '''
             }
@@ -32,7 +32,7 @@ pipeline {
                 stage('Unit tests') {
                     agent {
                         docker {
-                            image 'node:18-alpine'
+                            image 'node:18-slim'
                             reuseNode true
                         }
                     }
@@ -79,7 +79,7 @@ pipeline {
         stage('Deploy') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'node:18-slim'
                     reuseNode true
                 }
             }

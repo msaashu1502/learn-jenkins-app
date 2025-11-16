@@ -13,7 +13,7 @@ function App() {
           rel="noopener noreferrer"
         >
           Learn Jenkins on Udemy
-          Use node:18-slim image
+          Small change
         </a>
       </header>
       <p>

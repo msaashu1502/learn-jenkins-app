@@ -76,7 +76,27 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        //Add a new stage for staging environment
+        stage('Deploy staging') {
+            agent {
+                docker {
+                    image 'node:18-slim'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    #npm install netlify-cli
+                    node_modules/.bin/netlify --version
+                    echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
+                    node_modules/.bin/netlify status
+                    node_modules/.bin/netlify deploy --dir=build
+                '''
+            }
+        }
+
+        //Rename stage for production environment
+        stage('Deploy prod') {
             agent {
                 docker {
                     image 'node:18-slim'

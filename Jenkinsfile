@@ -91,7 +91,8 @@ pipeline {
                     node_modules/.bin/netlify status
                     node_modules/.bin/netlify deploy --dir=build --json > deploy-output.json
 
-                    # We need to remove this command from here and put it inside the script block 
+                    # The info that we want to pass is already outputted by this command
+                    # Now, we need to remove this command from here and put it inside the script block 
                     # node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json
                 '''
                 script {
@@ -105,6 +106,7 @@ pipeline {
             // script {}
         }
 
+        // Adding a new stage
         stage('Staging E2E') {
             agent {
                 docker {
@@ -115,7 +117,7 @@ pipeline {
 
             environment {
                 // If we keep this inside a single quote ('') then this is going to be considered as a string, 
-                // But if we use double quotes here only then env.STAGING_URL will be treated as a variable
+                // But if we use double quotes ("") here, only then env.STAGING_URL will be treated as a variable
                 CI_ENVIRONMENT_URL = "${env.STAGING_URL}"
 
                 // Alternative syntax

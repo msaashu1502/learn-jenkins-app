@@ -76,38 +76,8 @@ pipeline {
             }
         }
 
+        // Merging the two stages 'Deploy staging' and 'Staging E2E' into one stage and naming it 'Deploy staging'
         stage('Deploy staging') {
-            agent {
-                docker {
-                    image 'node:18-slim'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    npm install netlify-cli node-jq
-                    node_modules/.bin/netlify --version
-                    echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
-                    node_modules/.bin/netlify status
-                    node_modules/.bin/netlify deploy --dir=build --json > deploy-output.json
-
-                    # The info that we want to pass is already outputted by this command
-                    # Now, we need to remove this command from here and put it inside the script block 
-                    # node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json
-                '''
-                script {
-                    // Here the shell script that we are running is "node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json"
-                    env.STAGING_URL = sh(script: "node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json", returnStdout: true)
-                }
-            }
-
-            // If you use the script block here then you will get error: 
-            // Unknown stage section "script". Steps in a stage must be in a 'steps' block
-            // script {}
-        }
-
-        // Adding a new stage
-        stage('Staging E2E') {
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
@@ -116,20 +86,30 @@ pipeline {
             }
 
             environment {
-                // If we keep this inside a single quote ('') then this is going to be considered as a string, 
-                // But if we use double quotes ("") here, only then env.STAGING_URL will be treated as a variable
-                CI_ENVIRONMENT_URL = "${env.STAGING_URL}"
-
-                // Alternative syntax
-                // CI_ENVIRONMENT_URL = "$env.STAGING_URL"
+                // We will set it later in the script
+                CI_ENVIRONMENT_URL = 'STAGING_URL_TO_BE_SET'
             }
 
             steps {
                 sh '''
+                    # Verifying that playwright is also using the node.js environment
+                    node --version
+                    
+                    # Here we are still doing the deployment
+                    npm install netlify-cli node-jq
+                    node_modules/.bin/netlify --version
+                    echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
+                    node_modules/.bin/netlify status
+                    node_modules/.bin/netlify deploy --dir=build --json > deploy-output.json
+
+                    CI_ENVIRONMENT_URL=$(node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json)
+
+                    # And after the deployment we are running the playwright tests
                     npx playwright test  --reporter=html
                 '''
             }
 
+            // Finally we are publishing the report
             post {
                 always {
                     publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Staging E2E', reportTitles: '', useWrapperFileDirectly: true])
@@ -145,25 +125,8 @@ pipeline {
             }
         }
 
+        // Merging the two stages 'Deploy prod' and 'Prod E2E' into one stage and naming it 'Deploy prod'
         stage('Deploy prod') {
-            agent {
-                docker {
-                    image 'node:18-slim'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    npm install netlify-cli
-                    node_modules/.bin/netlify --version
-                    echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
-                    node_modules/.bin/netlify status
-                    node_modules/.bin/netlify deploy --dir=build --prod
-                '''
-            }
-        }
-
-        stage('Prod E2E') {
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
@@ -177,6 +140,12 @@ pipeline {
 
             steps {
                 sh '''
+                    node --version
+                    npm install netlify-cli
+                    node_modules/.bin/netlify --version
+                    echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
+                    node_modules/.bin/netlify status
+                    node_modules/.bin/netlify deploy --dir=build --prod
                     npx playwright test  --reporter=html
                 '''
             }

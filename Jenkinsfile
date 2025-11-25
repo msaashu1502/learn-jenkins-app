@@ -4,6 +4,7 @@ pipeline {
     environment {
         NETLIFY_SITE_ID = 'ae8f7da5-82c0-4834-8250-e16a983cdd9f'
         NETLIFY_AUTH_TOKEN = credentials('netlify-token')
+        REACT_APP_VERSION = "1.0.$BUILD_ID"
     }
 
     stages {
@@ -76,7 +77,6 @@ pipeline {
             }
         }
 
-        // Merging the two stages 'Deploy staging' and 'Staging E2E' into one stage and naming it 'Deploy staging'
         stage('Deploy staging') {
             agent {
                 docker {
@@ -86,30 +86,21 @@ pipeline {
             }
 
             environment {
-                // We will set it later in the script
                 CI_ENVIRONMENT_URL = 'STAGING_URL_TO_BE_SET'
             }
 
             steps {
                 sh '''
-                    # Verifying that playwright is also using the node.js environment
-                    node --version
-                    
-                    # Here we are still doing the deployment
                     npm install netlify-cli node-jq
                     node_modules/.bin/netlify --version
                     echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
                     node_modules/.bin/netlify status
                     node_modules/.bin/netlify deploy --dir=build --json > deploy-output.json
-
                     CI_ENVIRONMENT_URL=$(node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json)
-
-                    # And after the deployment we are running the playwright tests
                     npx playwright test  --reporter=html
                 '''
             }
 
-            // Finally we are publishing the report
             post {
                 always {
                     publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Staging E2E', reportTitles: '', useWrapperFileDirectly: true])
@@ -117,15 +108,6 @@ pipeline {
             }
         }
 
-        stage('Approval') {
-            steps {
-                timeout(time: 15, unit: 'MINUTES') {
-                    input message: 'Do you wish to deploy to production?', ok: 'Yes, I am sure!'
-                }
-            }
-        }
-
-        // Merging the two stages 'Deploy prod' and 'Prod E2E' into one stage and naming it 'Deploy prod'
         stage('Deploy prod') {
             agent {
                 docker {

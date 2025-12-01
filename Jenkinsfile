@@ -16,11 +16,18 @@ pipeline {
                     args "--entrypoint=''"
                 }
             }
+            environment {
+                // Defining an environment variable to store bucket name
+                AWS_S3_BUCKET = 'learn-jenkins-30112025'
+            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'my-aws', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
                     sh '''
                         aws --version
-                        aws s3 ls
+                        # Creating a new file index.html
+                        echo "Hello S3!" > index.html
+                        # Copying this local file index.html to our bucket "learn-jenkins-30112025"
+                        aws s3 cp index.html s3://$AWS_S3_BUCKET/index.html
                     '''
                 }
             }

@@ -41,7 +41,7 @@ pipeline {
 
             steps {
                 sh '''
-                    apk add docker
+                    cat /etc/os-release
                     docker build -t myjenkinsapp .
                 '''
             }

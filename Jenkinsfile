@@ -42,10 +42,11 @@ pipeline {
             steps {
                 sh '''
                     cat /etc/os-release
+                    sudo dnf install docker
                     docker build -t myjenkinsapp .
                 '''
             }
-        }     
+        }    
 
         stage('Deploy to AWS') {
             agent {

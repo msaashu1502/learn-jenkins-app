@@ -42,7 +42,7 @@ pipeline {
             steps {
                 sh '''
                     cat /etc/os-release
-                    sudo dnf install docker
+                    dnf install docker
                     docker build -t myjenkinsapp .
                 '''
             }

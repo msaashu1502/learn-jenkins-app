@@ -12,8 +12,7 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn Jenkins on Udemy
-          Staging environment
+          Learn Jenkins app on AWS
         </a>
       </header>
       <p>
